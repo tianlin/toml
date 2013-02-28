@@ -33,7 +33,7 @@ arrs = [
 `
 
 var testSmaller = `
-andrew = "gallant"
+andrew = "gall\"ant"
 kait = "brady"
 `
 
@@ -46,6 +46,6 @@ func TestLexer(t *testing.T) {
 		} else if item.typ == itemError {
 			t.Fatal(item.val)
 		}
-		// log.Println(item)
+		log.Println(item)
 	}
 }
