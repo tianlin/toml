@@ -33,8 +33,11 @@ arrs = [
 `
 
 var testSmaller = `
-andrew = "gall\"ant"
+[a.b] # Do you ignore me?
+andrew = "ga# ll\"ant" # what about me?
 kait = "brady"
+awesomeness = true
+pi = 3.14
 `
 
 func TestLexer(t *testing.T) {
