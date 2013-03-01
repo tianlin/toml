@@ -38,6 +38,11 @@ andrew = "ga# ll\"ant" # what about me?
 kait = "brady"
 awesomeness = true
 pi = 3.14
+dob = 1987-07-05T17:45:00Z
+perfection = [
+	[6, 28],
+	[496, 8128]
+]
 `
 
 func TestLexer(t *testing.T) {
@@ -49,6 +54,6 @@ func TestLexer(t *testing.T) {
 		} else if item.typ == itemError {
 			t.Fatal(item.val)
 		}
-		log.Println(item)
+		// log.Println(item)
 	}
 }
