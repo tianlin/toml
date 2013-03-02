@@ -107,11 +107,17 @@ func unify(data interface{}, rv reflect.Value) error {
 }
 
 func unifyStruct(mapping interface{}, rv reflect.Value) error {
-	rt := rv.Type()
-	tmap, ok := mapping.(map[string]interface{})
-	if !ok {
-		return mismatch(rv, "map", mapping)
+	switch t := mapping.(type) {
+	case map[string]interface{}:
+		return unifyStructMap(t, rv)
+	case []interface{}:
+		return unifyStructSlice(t, rv)
 	}
+	return mismatch(rv, "map or slice", mapping)
+}
+
+func unifyStructMap(tmap map[string]interface{}, rv reflect.Value) error {
+	rt := rv.Type()
 	for i := 0; i < rt.NumField(); i++ {
 		// A little tricky. We want to use the special `toml` name in the
 		// struct tag if it exists. In particular, we need to make sure that
@@ -134,6 +140,27 @@ func unifyStruct(mapping interface{}, rv reflect.Value) error {
 				// Bad user! No soup for you!
 				return e("Field '%s.%s' is unexported, and therefore cannot "+
 					"be loaded with reflection.", rt.String(), sft.Name)
+			}
+		}
+	}
+	return nil
+}
+
+func unifyStructSlice(slice []interface{}, rv reflect.Value) error {
+	rt := rv.Type()
+	for i := 0; i < rt.NumField(); i++ {
+		if i >= len(slice) {
+			return e("Struct '%s' expects a tuple at least of length %d, but "+
+				"found a tuple of length %d.",
+				rt.String(), rt.NumField(), len(slice))
+		}
+		sf := indirect(rv.Field(i))
+
+		// Don't try to mess with unexported types and other such things.
+		if sf.CanSet() {
+			if err := unify(slice[i], sf); err != nil {
+				return e("Type mismatch for '%s.%s': %s",
+					rt.String(), rt.Field(i).Name, err)
 			}
 		}
 	}

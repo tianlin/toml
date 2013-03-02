@@ -19,6 +19,8 @@ const (
 	itemDatetime
 	itemArray // the start of an array
 	itemArrayEnd
+	itemTuple // the start of a tuple
+	itemTupleEnd
 	itemKeyGroupStart
 	itemKeyGroupEnd
 	itemKeyStart
@@ -34,6 +36,9 @@ const (
 	arrayStart    = '['
 	arrayEnd      = ']'
 	arrayValTerm  = ','
+	tupleStart    = '('
+	tupleEnd      = ')'
+	tupleValTerm  = ','
 	commentStart  = '#'
 	stringStart   = '"'
 	stringEnd     = '"'
@@ -320,6 +325,10 @@ func lexValue(lx *lexer) stateFn {
 		lx.ignore()
 		lx.emit(itemArray)
 		return lexArrayValue
+	case r == tupleStart:
+		lx.ignore()
+		lx.emit(itemTuple)
+		return lexTupleValue
 	case r == stringStart:
 		lx.ignore() // ignore the '"'
 		return lexString
@@ -384,6 +393,55 @@ func lexArrayValueEnd(lx *lexer) stateFn {
 func lexArrayEnd(lx *lexer) stateFn {
 	lx.ignore()
 	lx.emit(itemArrayEnd)
+	return lx.pop()
+}
+
+// lexTupleValue consumes one value in a tuple. It assumes that '(' or ','
+// have already been consumed. All whitespace and new lines are ignored.
+func lexTupleValue(lx *lexer) stateFn {
+	r := lx.next()
+	switch {
+	case isWhitespace(r) || isNL(r):
+		return lexSkip(lx, lexTupleValue)
+	case r == commentStart:
+		lx.push(lexTupleValue)
+		return lexCommentStart
+	case r == tupleValTerm:
+		return lx.errorf("Unexpected tuple value terminator '%s'.",
+			tupleValTerm)
+	case r == tupleEnd:
+		return lexTupleEnd
+	}
+
+	lx.backup()
+	lx.push(lexTupleValueEnd)
+	return lexValue
+}
+
+// lexTupleValueEnd consumes the cruft between values of an tuple. Namely,
+// it ignores whitespace and expects either a ',' or a ')'.
+func lexTupleValueEnd(lx *lexer) stateFn {
+	r := lx.next()
+	switch {
+	case isWhitespace(r) || isNL(r):
+		return lexSkip(lx, lexTupleValueEnd)
+	case r == commentStart:
+		lx.push(lexTupleValueEnd)
+		return lexCommentStart
+	case r == tupleValTerm:
+		return lexTupleValue // move on to the next value
+	case r == tupleEnd:
+		return lexTupleEnd
+	}
+	return lx.errorf("Expected a tuple value terminator '%s' or an tuple "+
+		"terminator '%s', but got '%s' instead.", tupleValTerm, tupleEnd, r)
+}
+
+// lexTupleEnd finishes the lexing of a tuple. It assumes that a ')' has
+// just been consumed.
+func lexTupleEnd(lx *lexer) stateFn {
+	lx.ignore()
+	lx.emit(itemTupleEnd)
 	return lx.pop()
 }
 
@@ -652,10 +710,14 @@ func (itype itemType) String() string {
 		return "Array"
 	case itemArrayEnd:
 		return "ArrayEnd"
+	case itemTuple:
+		return "Tuple"
+	case itemTupleEnd:
+		return "TupleEnd"
 	case itemCommentStart:
 		return "CommentStart"
 	}
-	panic(fmt.Sprintf("BUG: Unknown type '%s'.", itype))
+	panic(fmt.Sprintf("BUG: Unknown type '%d'.", itype))
 }
 
 func (item item) String() string {
@@ -666,6 +728,12 @@ func escapeSpecial(c rune) string {
 	switch c {
 	case '\n':
 		return "\\n"
+	case '\r':
+		return "\\r"
+	case '\t':
+		return "\\t"
+	case eof:
+		return "EOF"
 	}
 	return string(c)
 }

@@ -190,6 +190,21 @@ func (p *parser) value(it item) (interface{}, tomlType) {
 			types = append(types, typ)
 		}
 		return array, p.typeOfArray(types)
+	case itemTuple:
+		tuple := make([]interface{}, 0)
+		types := make([]tomlType, 0)
+
+		for it = p.next(); it.typ != itemTupleEnd; it = p.next() {
+			if it.typ == itemCommentStart {
+				p.expect(itemText)
+				continue
+			}
+
+			val, typ := p.value(it)
+			tuple = append(tuple, val)
+			types = append(types, typ)
+		}
+		return tuple, p.typeOfTuple(types)
 	}
 	p.bug("Unexpected value type: %s", it.typ)
 	panic("unreachable")

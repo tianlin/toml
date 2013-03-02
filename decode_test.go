@@ -24,6 +24,16 @@ colors = [
 	["red", "green", "blue"],
 	["cyan", "magenta", "yellow", "black"],
 ]
+# asl = (26, "m", "Massachusetts")
+pcs = [
+	("Liger", 1, "work"),
+	("Ocelot", 3, "media"),
+	("Tiger", 4, "laptop"),
+	("Cheetah", 5, "media"),
+	("Serval", 2, "campus"),
+	("Geils", 6, "web server"),
+]
+zero = ()
 
 [Annoying.Cats]
 plato = "smelly"
@@ -36,8 +46,22 @@ type kitties struct {
 	Cauchy string
 }
 
-type simple struct {
+type asl struct {
 	Age      int
+	Sex      string
+	Location string
+}
+
+type pc struct {
+	Name  string
+	Power int
+	Use   string
+}
+
+type simple struct {
+	ASL      asl
+	Age      int
+	Zero     struct{}
 	Colors   [][]string
 	Pi       float64
 	YesOrNo  bool

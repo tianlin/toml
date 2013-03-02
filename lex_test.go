@@ -43,6 +43,7 @@ perfection = [
 	[6, 28],
 	[496, 8128]
 ]
+wonky = ([1, 2, 3], (1987-07-05T17:45:00Z, "hi"))
 `
 
 func TestLexer(t *testing.T) {

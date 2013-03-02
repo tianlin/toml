@@ -2,6 +2,7 @@ package toml
 
 import (
 	"fmt"
+	"strings"
 )
 
 // tomlType represents any Go type that corresponds to a TOML type.
@@ -101,6 +102,30 @@ func (atype tomlArrayType) String() string {
 	return fmt.Sprintf("[%s]", atype.of.String())
 }
 
+type tomlTupleType struct {
+	of []tomlType
+}
+
+func (ttype tomlTupleType) name() string {
+	return "Tuple"
+}
+
+func (ttype tomlTupleType) components() []tomlType {
+	return ttype.of
+}
+
+func (ptype tomlTupleType) polymorphic() bool {
+	return false
+}
+
+func (ttype tomlTupleType) String() string {
+	componentTypes := make([]string, len(ttype.of))
+	for i, ctype := range ttype.of {
+		componentTypes[i] = ctype.String()
+	}
+	return fmt.Sprintf("(%s)", strings.Join(componentTypes, ", "))
+}
+
 // typeOfPrimitive returns a tomlType of any primitive value in TOML.
 // Primitive values are: Integer, Float, Datetime, String and Bool.
 //
@@ -125,9 +150,6 @@ func (p *parser) typeOfPrimitive(lexItem item) tomlType {
 
 // typeOfArray returns a tomlType for an array given a list of types of its
 // values.
-//
-// In the current spec, if an array is homogeneous, then its type is always
-// "Array". If the array is not homogeneous, an error is generated.
 func (p *parser) typeOfArray(types []tomlType) tomlType {
 	// Empty arrays are polymorphic!
 	if len(types) == 0 {
@@ -142,4 +164,10 @@ func (p *parser) typeOfArray(types []tomlType) tomlType {
 		}
 	}
 	return tomlArrayType{theType}
+}
+
+// typeOfTuple returns a tomlType for a tuple given a list of types of its
+// values. Any combination of types is valid.
+func (p *parser) typeOfTuple(types []tomlType) tomlType {
+	return tomlTupleType{types}
 }

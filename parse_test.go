@@ -22,6 +22,14 @@ zulu = 1979-05-27T07:32:00Z
 whoop = "poop"
 # tests = [ [1, 2, 3], ["abc", "xyz"] ] 
 tests = [ [1, 2, 3], [], [4, 5, 6] ]
+
+tups = [(1, "hi", [1, 2, 3]), (2, "bye", [])]
+
+arrTups = [
+	[ ("a", 1), ("b", 2), ("c", 3) ],
+	[ ("x", 24), ("y", 25), ("z", 26) ],
+]
+
 arrs = [ # hmm
 		 # more comments are awesome.
 	1987-07-05T05:45:00Z,
