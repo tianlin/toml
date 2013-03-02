@@ -38,7 +38,6 @@ zero = ()
 [Annoying.Cats]
 plato = "smelly"
 cauchy = "stupido"
-
 `
 
 type kitties struct {

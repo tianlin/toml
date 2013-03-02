@@ -44,6 +44,7 @@ var (
 	tomlDatetime tomlBaseType = "Datetime"
 	tomlString   tomlBaseType = "String"
 	tomlBool     tomlBaseType = "Bool"
+	tomlHash     tomlBaseType = "Hash"
 )
 
 func (btype tomlBaseType) name() string {
