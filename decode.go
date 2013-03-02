@@ -308,7 +308,7 @@ func (md MetaData) IsDefined(key ...string) bool {
 func (md MetaData) Type(key ...string) string {
 	fullkey := strings.Join(key, ".")
 	if typ, ok := md.types[fullkey]; ok {
-		return typ.typeString()
+		return typ.String()
 	}
 	return ""
 }

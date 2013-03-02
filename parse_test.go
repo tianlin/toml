@@ -20,7 +20,8 @@ num = -5192
 f = -0.5192
 zulu = 1979-05-27T07:32:00Z
 whoop = "poop"
-tests = [ [1, 2, 3], ["abc", "xyz"] ]
+# tests = [ [1, 2, 3], ["abc", "xyz"] ] 
+tests = [ [1, 2, 3], [], [4, 5, 6] ]
 arrs = [ # hmm
 		 # more comments are awesome.
 	1987-07-05T05:45:00Z,
