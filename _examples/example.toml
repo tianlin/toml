@@ -26,7 +26,7 @@ enabled = true
   dc = "eqdc10"
 
 [clients]
-data = [ ["gamma", "delta"], [1, 2] ] # just an update to make sure parsers support it
+data = [ ("gamma", 1), ("delta", 2) ]
 
 # Line breaks are OK when inside arrays
 hosts = [
