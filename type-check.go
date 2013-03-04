@@ -6,9 +6,12 @@ import (
 )
 
 // tomlType represents any Go type that corresponds to a TOML type.
-// While the first draft of the TOML spec has a simplistic type system that
-// probably doesn't need this level of sophistication, we seem to be militating
-// toward adding real composite types.
+// The chief characters of any TOML type are: its base name, its component
+// types (if any), a human readable string of the complete type and whether
+// the type is polymorphic.
+//
+// A polymorphic type is a type that can look like any other type. Currently,
+// the only way for a polymorphic type to exist in TOML is with an empty array.
 type tomlType interface {
 	name() string
 	components() []tomlType
@@ -16,6 +19,12 @@ type tomlType interface {
 	String() string
 }
 
+// typeEqual returns true if type t1 is equal to type t2 and false otherwise.
+// Two types are equal if one of the types is polymorphic or if all of the
+// following criteria are satisfied:
+//
+//	- The names of the types are equivalent.
+//	- Each type has the same number of component types and they are all equal.
 func typeEqual(t1, t2 tomlType) bool {
 	if t1.polymorphic() || t2.polymorphic() {
 		return true
@@ -36,15 +45,23 @@ func typeEqual(t1, t2 tomlType) bool {
 	return true
 }
 
+// tomlBaseType corresponds to any type in TOML that is not polymorphic and
+// does not contain any component types.
 type tomlBaseType string
 
 var (
+	// The basic primitive types in TOML: int, float, datetimes, strings
+	// and booleans.
 	tomlInteger  tomlBaseType = "Integer"
 	tomlFloat    tomlBaseType = "Float"
 	tomlDatetime tomlBaseType = "Datetime"
 	tomlString   tomlBaseType = "String"
 	tomlBool     tomlBaseType = "Bool"
-	tomlHash     tomlBaseType = "Hash"
+
+	// Hashes are conceptually composite types, but in TOML, they are treated
+	// as opaque types not dependent on the types of its components.
+	// (i.e., hashes in TOML are heterogeneous.)
+	tomlHash tomlBaseType = "Hash"
 )
 
 func (btype tomlBaseType) name() string {
@@ -63,10 +80,23 @@ func (btype tomlBaseType) String() string {
 	return btype.name()
 }
 
+// tomlPolymorphicType corresponds to any type that is polymorphic. A
+// polymorphic type can "look" like any other single type. In TOML, polymorphic
+// types manifest when there are empty lists. e.g.,
+//
+//	data = [[1, 2], [], [3, 4]]
+//	nodata = []
+//
+// where data has type "list of list of integers" and nodata has type "list
+// of a".
 type tomlPolymorphicType struct{}
 
+// Create a single trivial value.
 var tomlPolymorphic tomlPolymorphicType = struct{}{}
 
+// XXX: This is a problem, since not all polymorphic types are equivalent.
+// Solving this problem is difficult. We'd need a distinct type variable for
+// every distinct polymorphic type.
 func (ptype tomlPolymorphicType) name() string {
 	return "a"
 }
@@ -83,6 +113,9 @@ func (ptype tomlPolymorphicType) String() string {
 	return ptype.name()
 }
 
+// tomlArrayType corresponds to the type of any TOML array. In particular, the
+// type of an array contains one component type: the type of the values the
+// array contains.
 type tomlArrayType struct {
 	of tomlType
 }
@@ -99,10 +132,14 @@ func (ptype tomlArrayType) polymorphic() bool {
 	return false
 }
 
+// Haskell syntax ftw.
 func (atype tomlArrayType) String() string {
 	return fmt.Sprintf("[%s]", atype.of.String())
 }
 
+// tomlTupleType corresponds to the type of any TOML tuple. In particular, the
+// type of a tuple contains N ordered component types: the type of each value
+// at the ith position of the tuple.
 type tomlTupleType struct {
 	of []tomlType
 }
